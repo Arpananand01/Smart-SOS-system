@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Help Assist</title>
+    <meta name="theme-color" content="#FF3B30">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-minor: #FFFBEA;
+            --bg-major: #FEEED0;
+            --bg-critical: #FEEED0;
+            --bg-default: #ffffff;
+            --color-minor: #FFC900;
+            --color-major: #FF9500;
+            --color-critical: #FF3B30;
+            --dark-mode-bg: #121212;
+            --dark-mode-card: #1E1E1E;
+            --dark-mode-text: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease;
+        }
+
+        .dark-mode {
+            background-color: var(--dark-mode-bg) !important;
+            color: var(--dark-mode-text);
+        }
+        .dark-mode .bg-white {
+            background-color: var(--dark-mode-card) !important;
+        }
+        .dark-mode .text-gray-900 {
+            color: var(--dark-mode-text) !important;
+        }
+        .dark-mode .text-gray-600 {
+            color: #B0B0B0 !important;
+        }
+        .dark-mode .border-gray-300 {
+            border-color: #333 !important;
+        }
+        .dark-mode .ring-gray-300 {
+            --tw-ring-color: #333 !important;
+        }
+
+        /* Page transitions */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+            will-change: opacity, transform;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* SOS button animation */
+        .sos-button-pulse {
+            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        .sos-button-glow {
+            box-shadow: 0 0 5px rgba(255, 59, 48, 0.5), 0 0 10px rgba(255, 59, 48, 0.5), 0 0 15px rgba(255, 59, 48, 0.5);
+            animation: glow 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 59, 48, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 30px rgba(255, 59, 48, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(255, 59, 48, 0.5); }
+        }
+
+        /* Circular progress bar */
+        .progress-circle {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(red 0deg, transparent 0deg);
+            z-index: 1;
+        }
+        .progress-circle-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 10px);
+            height: calc(100% - 10px);
+            background-color: var(--color-critical);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        /* Bottom nav bar animation */
+        .bottom-nav {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: transform 0.2s ease-in-out;
+        }
+        .nav-item.active .nav-icon {
+            transform: translateY(-8px) scale(1.2);
+        }
+
+        /* Modal animations */
+        .modal-overlay {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes zoomIn {
+            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* App header */
+        .app-header {
+            background: linear-gradient(135deg, rgba(218, 14, 3, 0.18), rgba(255, 149, 0, 0.377));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+
+        }
+
+        /* Toast */
+        .toast-enter { opacity: 0; transform: translateY(8px); }
+        .toast-enter-active { opacity: 1; transform: translateY(0); transition: opacity .2s, transform .2s; }
+        .toast-exit { opacity: 1; transform: translateY(0); }
+        .toast-exit-active { opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+
+        /* Icon styling */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Switch toggle */
+        .toggle-switch .toggle-ball {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toggle-switch input:checked + .toggle-track .toggle-ball {
+            transform: translateX(20px);
+        }
+        .toggle-switch input:checked + .toggle-track {
+            background-color: #FF3B30;
+        }
+
+        /* Severity toggles */
+        .severity-toggle {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Ripple effect */
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
+        }
+        .ripple-effect:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .3s, opacity .5s;
+        }
+        .ripple-effect:active:after {
+            transform: scale(0, 0);
+            opacity: .2;
+            transition: 0s;
+        }
+
+        /* Swipe to delete/edit */
+        .swipe-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .swipe-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 1rem;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .contact-item:focus .swipe-actions,
+        .contact-item:hover .swipe-actions {
+            transform: translateX(0);
+        }
+
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-screen">
+    <!-- Top App Header -->
+    <header class="app-header fixed top-0 left-0 right-0 z-[60] border-b border-gray-200/60 dark:border-gray-700/60">
+        <div class="h-14 px-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center font-bold shadow-sm">E</div>
+                <span style="color: black; font-weight: 1000; font-size: larger;" class="font-semibold text-gray-900 dark:text-gray-100">Emergency Help Assist</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="quick-dark-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 " style="filter: invert(1);" title="Toggle dark mode">
+                    <svg class="w-5 h-5 text-gray-700 dark:text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <button id="quick-install" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" style="filter: invert(1);" title="Install app">
+                    <svg class="w-5 h-5 text-gray-700 dark:text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Splash Screen / Tutorial -->
+    <div id="tutorial-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-[200]">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl p-8 w-full max-w-sm text-center shadow-2xl">
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Welcome!</h2>
+            <p class="text-gray-700 dark:text-gray-300 mb-6">This app is designed to get you help quickly. Just tap the SOS button to start the countdown.</p>
+            <button id="get-started-button" class="w-full py-3 rounded-xl bg-red-500 text-white font-semibold ripple-effect">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main id="main-content" class="flex-1 overflow-y-auto pb-20">
+
+        <!-- Home Page -->
+        <div id="home" class="page pt-16 px-4">
+            <div class="flex flex-col items-center justify-center min-h-full">
+                <h1 class="text-xl font-semibold mb-2 text-center text-gray-900">Emergency Help Assist</h1>
+                <p class="text-sm text-center text-gray-600 mb-8">Tap the button below for instant help in emergencies.</p>
+                
+                <div class="relative w-48 h-48 flex items-center justify-center">
+                    <div id="countdown-circle" class="absolute inset-0 rounded-full border-4 border-transparent"></div>
+                    <button id="sos-button" class="sos-button-pulse ripple-effect w-48 h-48 rounded-full shadow-xl flex flex-col items-center justify-center transform transition-transform duration-300 active:scale-95 z-10 bg-gradient-to-br from-red-500 to-red-600 ring-4 ring-red-200 dark:ring-red-900">
+                        <span id="sos-text" class="text-white text-4xl font-bold">SOS</span>
+                        <span id="countdown-timer" class="text-white text-sm font-light mt-1 hidden">10</span>
+                    </button>
+                </div>
+                
+                <div id="severity-toggles" class="flex justify-center items-center space-x-2 mt-8 w-full max-w-sm">
+                    <div class="flex-1 text-center">
+                        <button class="severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors" data-severity="minor">Minor</button>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <button class="severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors" data-severity="major">Major</button>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <button class="severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors" data-severity="critical">Critical</button>
+                    </div>
+                </div>
+                
+                <div id="message-preview" class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mt-8 w-full max-w-lg shadow-sm">
+                    <h3 class="text-sm font-semibold mb-2">Message Preview</h3>
+                    <p id="preview-text" class="text-gray-700 dark:text-gray-300 text-sm mb-4"></p>
+                    <button id="copy-button" class="w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-lg font-medium ripple-effect">Copy Message</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts Page -->
+        <div id="contacts" class="page px-4 pt-16">
+            <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Emergency Contacts</h1>
+            <div id="contacts-list" class="space-y-4 mb-4">
+                <!-- Contacts will be dynamically injected here -->
+            </div>
+            <button id="add-contact-button" class="w-full bg-red-500 text-white py-3 rounded-xl font-semibold shadow-lg ripple-effect">
+                Add New Contact
+            </button>
+        </div>
+
+        <!-- Medical Details Page -->
+        <div id="medical" class="page px-4 pt-16">
+            <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Medical Details</h1>
+            <div class="space-y-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">My Information</h3>
+                    <form id="medical-form" class="space-y-4">
+                        <div>
+                            <label for="blood-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Type</label>
+                            <input type="text" id="blood-type" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="e.g., A+, O- etc.">
+                        </div>
+                        <div>
+                            <label for="allergies" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allergies</label>
+                            <textarea id="allergies" class="w-full h-24 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none" placeholder="e.g., Penicillin, Latex, Bee stings"></textarea>
+                        </div>
+                        <div>
+                            <label for="medications" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medications</label>
+                            <textarea id="medications" class="w-full h-24 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none" placeholder="e.g., Insulin, Warfarin"></textarea>
+                        </div>
+                        <div>
+                            <label for="conditions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chronic Conditions</label>
+                            <textarea id="conditions" class="w-full h-24 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none" placeholder="e.g., Diabetes, Hypertension, Asthma"></textarea>
+                        </div>
+                        <button type="submit" id="save-medical-button" class="w-full py-3 rounded-xl bg-red-500 text-white font-semibold ripple-effect">Save Medical Details</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page px-4 pt-16">
+            <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Settings</h1>
+            <div class="space-y-6">
+                <!-- Theme Toggle -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-900 dark:text-gray-100">Dark Mode</h3>
+                    <label for="dark-mode-toggle" class="toggle-switch relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
+                        <div class="toggle-track w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-400 dark:bg-gray-700 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                    </label>
+                </div>
+                <!-- Default SOS Message -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Default SOS Message</h3>
+                    <textarea id="default-message-input" class="w-full h-24 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-900 dark:text-gray-100 resize-none" placeholder="I need help. My location is..."></textarea>
+                    <button id="save-message-button" class="mt-2 w-full bg-red-500 text-white py-2 rounded-lg font-medium ripple-effect">Save Message</button>
+                </div>
+                <!-- Feature Toggles -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Location Sharing</h3>
+                        <label class="toggle-switch relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="location-sharing-toggle" class="sr-only peer">
+                            <div class="toggle-track w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-400 dark:bg-gray-700 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Auto Crash Detection</h3>
+                        <label class="toggle-switch relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="crash-detection-toggle" class="sr-only peer">
+                            <div class="toggle-track w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-400 dark:bg-gray-700 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Silent Mode Override</h3>
+                        <label class="toggle-switch relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="silent-mode-toggle" class="sr-only peer">
+                            <div class="toggle-track w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-400 dark:bg-gray-700 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insurance Page -->
+        <div id="insurance" class="page px-4 pt-16">
+            <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Insurance Options</h1>
+            <div class="space-y-4">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+                    <img src="https://placehold.co/600x200/FFC900/ffffff?text=Travel+Insurance" alt="Travel Insurance" class="w-full rounded-lg mb-4">
+                    <h3 class="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">Travel Insurance</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Coverage for unexpected medical emergencies while traveling.</p>
+                    <button class="w-full bg-red-500 text-white py-2 rounded-lg font-medium ripple-effect">Apply Now</button>
+                    <div id="travel-info" class="mt-4">
+                        <button class="w-full text-left text-sm font-medium text-red-500" onclick="toggleAccordion('travel-accordion')">
+                            More Info <span class="float-right transform transition-transform duration-300 accordion-icon">&#9660;</span>
+                        </button>
+                        <div id="travel-accordion" class="hidden mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            Covers medical emergencies, trip cancellations, and more.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast container -->
+    <div id="toast-root" class="fixed bottom-20 right-4 z-[70] space-y-2"></div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-gray-200 dark:bg-gray-900/80 dark:border-gray-700">
+        <div class="flex justify-around items-center h-16">
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center text-red-500 w-1/4 active">
+                <svg class="nav-icon icon transition-transform duration-300" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="text-xs mt-1">Home</span>
+            </button>
+            <button id="nav-contacts" class="nav-item flex flex-col items-center justify-center text-gray-500 w-1/4">
+                <svg class="nav-icon icon transition-transform duration-300" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="text-xs mt-1">Contacts</span>
+            </button>
+            <button id="nav-medical" class="nav-item flex flex-col items-center justify-center text-gray-500 w-1/4">
+                <svg class="nav-icon icon transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                <span class="text-xs mt-1">Medical</span>
+            </button>
+            <button id="nav-settings" class="nav-item flex flex-col items-center justify-center text-gray-500 w-1/4">
+                <svg class="nav-icon icon transition-transform duration-300" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.22a2 2 0 0 1-2 2H4.46a2 2 0 0 0-2 2v.44a2 2 0 0 1-2 2v.44a2 2 0 0 0 2 2h.22a2 2 0 0 1 2 2v.22a2 2 0 0 0 2 2h.44a2 2 0 0 1 2 2v.22a2 2 0 0 0 2 2h.44a2 2 0 0 1 2-2h.22a2 2 0 0 0 2-2v-.44a2 2 0 0 1 2-2v-.22a2 2 0 0 0 2-2v-.44a2 2 0 0 1 2-2h.22a2 2 0 0 0 2-2v-.44a2 2 0 0 1-2-2v-.22a2 2 0 0 0-2-2h-.44a2 2 0 0 1-2-2v-.22a2 2 0 0 0-2-2h-.44a2 2 0 0 1-2-2v-.22a2 2 0 0 0-2-2zm-3.16 8.35a3 3 0 1 1-2.83-2.83 3 3 0 0 1 2.83 2.83z"></path></svg>
+                <span class="text-xs mt-1">Settings</span>
+            </button>
+        </div>
+    </nav>
+    
+    
+    <!-- Modals -->
+
+    <!-- Contact Form Modal -->
+    <div id="contact-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-[100]">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <h2 id="contact-modal-title" class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Add New Contact</h2>
+            <form id="contact-form" class="space-y-4">
+                <div>
+                    <input type="text" id="contact-name" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Name" required>
+                </div>
+                <div>
+                    <input type="tel" id="contact-phone" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Phone Number" required>
+                </div>
+                <div>
+                    <input type="email" id="contact-email" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Email (Optional)">
+                </div>
+                <div>
+                    <input type="text" id="contact-relation" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Relation (e.g., Family, Friend)">
+                </div>
+                <div class="flex space-x-2 mt-4">
+                    <button type="button" id="cancel-contact-button" class="flex-1 py-3 px-4 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold ripple-effect">Cancel</button>
+                    <button type="submit" id="save-contact-button" class="flex-1 py-3 px-4 rounded-xl bg-red-500 text-white font-semibold ripple-effect">Save Contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Confirmation Modal -->
+    <div id="alert-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-[100]">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center shadow-2xl">
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Alert Sent!</h2>
+            <p class="text-gray-700 dark:text-gray-300 mb-6">Your emergency contacts have been notified. Help is on the way.</p>
+            <div class="flex justify-center space-x-2">
+                <button id="dismiss-alert-modal" class="py-3 px-6 rounded-xl bg-red-500 text-white font-semibold ripple-effect">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Installation Modal -->
+    <div id="install-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center p-4 z-[100]">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center shadow-2xl">
+            <h2 class="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">Install App</h2>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">Add this app to your home screen for quick access and offline use.</p>
+            <button id="install-button" class="w-full py-3 rounded-xl bg-red-500 text-white font-semibold ripple-effect">Add to Home Screen</button>
+            <button id="cancel-install-button" class="w-full py-2 rounded-xl text-gray-600 dark:text-gray-400 font-semibold mt-2">Maybe later</button>
+        </div>
+    </div>
+    
+    <audio id="siren-sound" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" preload="auto" loop></audio>
+
+    <script>
+        // --- Firebase Firestore Setup ---
+        // Using a temporary in-memory store for demonstration purposes since
+        // Firebase config and auth token are not available in this environment.
+        // A full-fledged app would use Firestore for persistent storage.
+        const DB_STORAGE_KEY = 'emergency-help-assist-db';
+        let db = {
+            contacts: [],
+            medicalDetails: {},
+            settings: {
+                defaultMessage: "I need help. My location is ",
+                locationSharing: true,
+                crashDetection: false,
+                silentModeOverride: true,
+                darkMode: false,
+                isFirstLoad: true
+            }
+        };
+
+        const loadDb = () => {
+            try {
+                const data = localStorage.getItem(DB_STORAGE_KEY);
+                if (data) {
+                    db = JSON.parse(data);
+                }
+            } catch (e) {
+                console.error("Failed to load from localStorage:", e);
+            }
+        };
+
+        const saveDb = () => {
+            try {
+                localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                console.error("Failed to save to localStorage:", e);
+            }
+        };
+        
+        // Initial load
+        window.addEventListener('load', () => {
+            loadDb();
+            renderContacts();
+            loadSettings();
+            loadMedicalDetails();
+            updateSeverityMessage();
+            if (db.settings.isFirstLoad) {
+                showModal('tutorial-modal');
+            } else {
+                navigateTo('home');
+            }
+        });
+
+        document.getElementById('get-started-button').addEventListener('click', () => {
+            hideModal('tutorial-modal');
+            db.settings.isFirstLoad = false;
+            saveDb();
+            navigateTo('home');
+        });
+
+        // --- UI Logic and State Management ---
+        let currentSeverity = 'minor';
+        let countdownInterval;
+        let countdownTimer = 10;
+        let isCountingDown = false;
+        let isDarkMode = false;
+        let currentLocation = null;
+        let sirenSound = document.getElementById('siren-sound');
+        
+        const sosButton = document.getElementById('sos-button');
+        const sosText = document.getElementById('sos-text');
+        const countdownTimerEl = document.getElementById('countdown-timer');
+        const countdownCircle = document.getElementById('countdown-circle');
+        const sirenSoundEl = document.getElementById('siren-sound');
+        const pages = document.querySelectorAll('.page');
+        const navItems = document.querySelectorAll('.nav-item');
+        const contactForm = document.getElementById('contact-form');
+        const contactsList = document.getElementById('contacts-list');
+        const medicalForm = document.getElementById('medical-form');
+        const alertModal = document.getElementById('alert-modal');
+        const contactModal = document.getElementById('contact-modal');
+        const addContactButton = document.getElementById('add-contact-button');
+        const cancelContactButton = document.getElementById('cancel-contact-button');
+        const dismissAlertModalButton = document.getElementById('dismiss-alert-modal');
+        const copyButton = document.getElementById('copy-button');
+        const previewTextEl = document.getElementById('preview-text');
+        const defaultMessageInput = document.getElementById('default-message-input');
+        const saveMessageButton = document.getElementById('save-message-button');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const severityToggles = document.querySelectorAll('.severity-toggle');
+        
+        // Show/Hide Modals
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Page Navigation
+        function navigateTo(pageId) {
+            pages.forEach(page => page.classList.remove('active'));
+            navItems.forEach(item => item.classList.remove('active', 'text-red-500'));
+            navItems.forEach(item => item.classList.add('text-gray-500'));
+            
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById(`nav-${pageId}`).classList.add('active', 'text-red-500');
+            document.getElementById(`nav-${pageId}`).classList.remove('text-gray-500');
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const pageId = item.id.replace('nav-', '');
+                navigateTo(pageId);
+            });
+        });
+
+        // Countdown Logic
+        function startCountdown() {
+            if (isCountingDown) return;
+            isCountingDown = true;
+            countdownTimer = 10;
+            sosButton.classList.remove('sos-button-pulse', 'sos-button-glow');
+            sosText.textContent = 'CANCEL';
+            countdownTimerEl.classList.remove('hidden');
+            sirenSoundEl.play();
+            updateCountdownUI();
+            
+            // Refresh location at SOS start to try for freshest GPS fix
+            getLocation();
+            
+            // Vibrate if supported
+            if ("vibrate" in navigator) {
+                navigator.vibrate([1000, 500, 1000]);
+            }
+            
+            countdownInterval = setInterval(() => {
+                countdownTimer--;
+                updateCountdownUI();
+                if (countdownTimer <= 0) {
+                    clearInterval(countdownInterval);
+                    isCountingDown = false;
+                    sirenSoundEl.pause();
+                    sirenSoundEl.currentTime = 0;
+                    sosButton.classList.add('sos-button-pulse', 'sos-button-glow');
+                    sosText.textContent = 'SOS';
+                    countdownTimerEl.classList.add('hidden');
+                    showModal('alert-modal');
+                    sendAlerts();
+                }
+            }, 1000);
+        }
+        
+        function updateCountdownUI() {
+            countdownTimerEl.textContent = countdownTimer;
+            const progress = (10 - countdownTimer) / 10;
+            const angle = progress * 360;
+            countdownCircle.style.background = `conic-gradient(var(--color-critical) ${angle}deg, #e5e7eb ${angle}deg)`;
+        }
+        
+        function stopCountdown() {
+            if (!isCountingDown) return;
+            clearInterval(countdownInterval);
+            isCountingDown = false;
+            sirenSoundEl.pause();
+            sirenSoundEl.currentTime = 0;
+            sosButton.classList.add('sos-button-pulse', 'sos-button-glow');
+            sosText.textContent = 'SOS';
+            countdownTimerEl.classList.add('hidden');
+            countdownCircle.style.background = 'transparent';
+        }
+        
+        sosButton.addEventListener('click', () => {
+            if (isCountingDown) {
+                stopCountdown();
+            } else {
+                startCountdown();
+            }
+        });
+
+        // Emergency button and message logic
+        function updateSeverityMessage(severity = currentSeverity) {
+            currentSeverity = severity;
+            
+            const minorBtn = document.querySelector('[data-severity="minor"]');
+            const majorBtn = document.querySelector('[data-severity="major"]');
+            const criticalBtn = document.querySelector('[data-severity="critical"]');
+
+            // Reset all styles
+            minorBtn.className = 'severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors';
+            majorBtn.className = 'severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors';
+            criticalBtn.className = 'severity-toggle px-4 py-2 rounded-full border border-gray-300 text-sm font-medium transition-colors';
+            document.body.style.backgroundColor = 'var(--bg-default)';
+
+            // Apply active styles and animations
+            if (severity === 'minor') {
+                minorBtn.classList.add('bg-yellow-100', 'border-yellow-300', 'text-yellow-700', 'scale-110');
+                document.body.style.backgroundColor = 'var(--bg-minor)';
+            } else if (severity === 'major') {
+                majorBtn.classList.add('bg-orange-100', 'border-orange-300', 'text-orange-700', 'scale-110');
+                document.body.style.backgroundColor = 'var(--bg-major)';
+            } else if (severity === 'critical') {
+                criticalBtn.classList.add('bg-red-100', 'border-red-300', 'text-red-700', 'scale-110');
+                document.body.style.backgroundColor = 'var(--bg-critical)';
+            }
+            
+            const severityText = severity.charAt(0).toUpperCase() + severity.slice(1);
+            const timestamp = new Date().toLocaleString();
+            let locationText = "Location unknown.";
+            if (db.settings.locationSharing && currentLocation) {
+                const lat = Number(currentLocation.latitude);
+                const lon = Number(currentLocation.longitude);
+                const link = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+                const coords = isFinite(lat) && isFinite(lon) ? ` (lat: ${lat.toFixed(6)}, lon: ${lon.toFixed(6)})` : '';
+                const accuracy = currentLocation.accuracy ? ` (accuracy: ${currentLocation.accuracy.toFixed(0)}m)` : '';
+                const approx = currentLocation.source === 'ip' ? ' (approximate IP-based)' : '';
+                const address = currentLocation.address ? ` Address: ${currentLocation.address}` : '';
+                locationText = `My location is: ${link}${coords}${accuracy}${approx}.${address}`.trim();
+            } else if (!db.settings.locationSharing) {
+                locationText = "Location sharing disabled.";
+            }
+
+            const med = db.medicalDetails || {};
+            const medPieces = [];
+            if (med.bloodType) medPieces.push(`Blood: ${med.bloodType}`);
+            if (med.allergies) medPieces.push(`Allergies: ${med.allergies}`);
+            if (med.medications) medPieces.push(`Meds: ${med.medications}`);
+            if (med.conditions) medPieces.push(`Conditions: ${med.conditions}`);
+            const medText = medPieces.length ? ` Medical: ${medPieces.join('; ')}.` : '';
+
+            const messageTemplate = db.settings.defaultMessage || "I need help. My location is ";
+            previewTextEl.textContent = `${messageTemplate.trim()} at ${timestamp}. Severity: ${severityText}. ${locationText}${medText}`;
+        }
+        
+        severityToggles.forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                const severity = e.target.dataset.severity;
+                updateSeverityMessage(severity);
+            });
+        });
+
+        copyButton.addEventListener('click', () => {
+            const message = previewTextEl.textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = message;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show copy confirmation
+            const originalText = copyButton.textContent;
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, 2000);
+            showToast('Message copied');
+        });
+        
+        // Contact Management
+        function renderContacts() {
+            contactsList.innerHTML = '';
+            if (db.contacts.length === 0) {
+                contactsList.innerHTML = '<p class="text-center text-gray-500">No contacts added yet.</p>';
+            }
+            db.contacts.forEach((contact, index) => {
+                const contactItem = document.createElement('div');
+                contactItem.className = 'swipe-container bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between relative';
+                contactItem.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1">
+                        <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-semibold">
+                            ${(contact.name || '?').trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                        </div>
+                        <div class="contact-view">
+                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">${contact.name}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${contact.relation || 'Contact'}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${contact.phone || ''}</p>
+                        </div>
+                        <form class="contact-edit hidden w-full max-w-xs">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 w-full">
+                                <input type="text" name="name" value="${contact.name || ''}" class="mb-2 sm:mb-0 flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Name" required>
+                                <input type="tel" name="phone" value="${contact.phone || ''}" class="mb-2 sm:mb-0 flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Phone" required>
+                                <div class="flex space-x-2 mt-2 sm:mt-0">
+                                    <button type="submit" class="px-3 py-2 rounded-lg bg-blue-500 text-white">Save</button>
+                                    <button type="button" class="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 cancel-inline">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="flex items-center space-x-2 z-10">
+                        ${contact.phone ? `<a href="sms:${contact.phone}" class="text-gray-500 hover:text-red-500 transition-colors">
+                             <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </a>` : ''}
+                        ${contact.phone ? `<a href="https://wa.me/${contact.phone}" class="text-gray-500 hover:text-red-500 transition-colors">
+                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"></path><path d="M10 8l4 4-4 4"></path></svg>
+                        </a>` : ''}
+                        ${contact.email ? `<a href="mailto:${contact.email}" class="text-gray-500 hover:text-red-500 transition-colors">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </a>` : ''}
+                        <button class="bg-blue-500 text-white px-3 py-2 rounded-lg ripple-effect edit-contact" data-id="${contact.id}">Edit</button>
+                        <button class="bg-red-500 text-white px-3 py-2 rounded-lg ripple-effect delete-contact" data-id="${contact.id}">Delete</button>
+                    </div>
+                `;
+                contactsList.appendChild(contactItem);
+            });
+            
+            // Add listeners for edit/delete
+            document.querySelectorAll('.delete-contact').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const contactId = e.currentTarget.dataset.id;
+                    deleteContact(contactId);
+                });
+            });
+            document.querySelectorAll('.edit-contact').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const contactItem = e.currentTarget.closest('.swipe-container');
+                    if (!contactItem) return;
+                    const view = contactItem.querySelector('.contact-view');
+                    const form = contactItem.querySelector('.contact-edit');
+                    if (!view || !form) return;
+                    view.classList.add('hidden');
+                    form.classList.remove('hidden');
+                    const contactId = e.currentTarget.dataset.id;
+                    // Attach handlers for this form
+                    const cancelBtn = form.querySelector('.cancel-inline');
+                    if (cancelBtn) {
+                        cancelBtn.onclick = () => {
+                            form.classList.add('hidden');
+                            view.classList.remove('hidden');
+                        };
+                    }
+                    form.onsubmit = (ev) => {
+                        ev.preventDefault();
+                        const name = form.querySelector('input[name="name"]').value.trim();
+                        const phone = form.querySelector('input[name="phone"]').value.trim();
+                        if (!name || !phone) return;
+                        db.contacts = db.contacts.map(c => c.id === contactId ? { ...c, name, phone } : c);
+                        saveDb();
+                        renderContacts();
+                    };
+                });
+            });
+        }
+        
+        function addContact(contactData) {
+            contactData.id = Date.now().toString(); // Simple unique ID
+            db.contacts.push(contactData);
+            saveDb();
+            renderContacts();
+        }
+        
+        function deleteContact(contactId) {
+            db.contacts = db.contacts.filter(c => c.id !== contactId);
+            saveDb();
+            renderContacts();
+        }
+        
+        function editContact(contactId) {
+            const contact = db.contacts.find(c => c.id === contactId);
+            if (contact) {
+                document.getElementById('contact-modal-title').textContent = 'Edit Contact';
+                document.getElementById('contact-name').value = contact.name;
+                document.getElementById('contact-phone').value = contact.phone;
+                document.getElementById('contact-email').value = contact.email;
+                document.getElementById('contact-relation').value = contact.relation;
+                contactForm.dataset.editingId = contactId;
+                showModal('contact-modal');
+            }
+        }
+        
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const contactData = {
+                name: document.getElementById('contact-name').value,
+                phone: document.getElementById('contact-phone').value,
+                email: document.getElementById('contact-email').value,
+                relation: document.getElementById('contact-relation').value,
+            };
+            
+            const editingId = contactForm.dataset.editingId;
+            if (editingId) {
+                db.contacts = db.contacts.map(c => c.id === editingId ? { ...contactData, id: editingId } : c);
+                delete contactForm.dataset.editingId;
+            } else {
+                addContact(contactData);
+            }
+            
+            saveDb();
+            renderContacts();
+            contactForm.reset();
+            hideModal('contact-modal');
+        });
+        
+        addContactButton.addEventListener('click', () => {
+            document.getElementById('contact-modal-title').textContent = 'Add New Contact';
+            contactForm.reset();
+            delete contactForm.dataset.editingId;
+            showModal('contact-modal');
+        });
+        
+        cancelContactButton.addEventListener('click', () => {
+            hideModal('contact-modal');
+            contactForm.reset();
+        });
+        
+        dismissAlertModalButton.addEventListener('click', () => {
+            hideModal('alert-modal');
+        });
+
+        // Medical Details Logic
+        function loadMedicalDetails() {
+            const medicalData = db.medicalDetails;
+            document.getElementById('blood-type').value = medicalData.bloodType || '';
+            document.getElementById('allergies').value = medicalData.allergies || '';
+            document.getElementById('medications').value = medicalData.medications || '';
+            document.getElementById('conditions').value = medicalData.conditions || '';
+        }
+
+        medicalForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            db.medicalDetails = {
+                bloodType: document.getElementById('blood-type').value,
+                allergies: document.getElementById('allergies').value,
+                medications: document.getElementById('medications').value,
+                conditions: document.getElementById('conditions').value,
+            };
+            saveDb();
+            showToast('Medical details saved');
+        });
+
+        // Settings Logic
+        function loadSettings() {
+            defaultMessageInput.value = db.settings.defaultMessage;
+            document.getElementById('location-sharing-toggle').checked = db.settings.locationSharing;
+            document.getElementById('crash-detection-toggle').checked = db.settings.crashDetection;
+            document.getElementById('silent-mode-toggle').checked = db.settings.silentModeOverride;
+            
+            isDarkMode = db.settings.darkMode;
+            darkModeToggle.checked = isDarkMode;
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+        }
+
+        saveMessageButton.addEventListener('click', () => {
+            db.settings.defaultMessage = defaultMessageInput.value;
+            saveDb();
+            updateSeverityMessage();
+            showToast('Default message saved');
+        });
+
+        darkModeToggle.addEventListener('change', (e) => {
+            isDarkMode = e.target.checked;
+            db.settings.darkMode = isDarkMode;
+            saveDb();
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+
+        // Header quick actions
+        const quickDarkToggle = document.getElementById('quick-dark-toggle');
+        const quickInstall = document.getElementById('quick-install');
+        if (quickDarkToggle) {
+            quickDarkToggle.addEventListener('click', () => {
+                darkModeToggle.checked = !darkModeToggle.checked;
+                darkModeToggle.dispatchEvent(new Event('change'));
+                showToast(darkModeToggle.checked ? 'Dark mode enabled' : 'Dark mode disabled');
+            });
+        }
+        if (quickInstall) {
+            quickInstall.addEventListener('click', () => {
+                showModal('install-modal');
+            });
+        }
+        
+        // Geolocation (high accuracy) + Reverse geocoding
+        let watchId = null;
+        let bestLocation = null;
+        let locationStartTime = null;
+        let isLocationFetching = false;
+        const ACCURACY_TARGET = 50; // meters
+        const MAX_WATCH_TIME = 60000; // 60 seconds - give more time
+        const RETRY_INTERVAL = 5000; // 5 seconds between retries
+
+        async function reverseGeocode(lat, lon) {
+            try {
+                // Use backend Google Maps API for better accuracy
+                const response = await fetch('http://localhost:3001/api/reverse-geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lon })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.address || '';
+                }
+                // Fallback to frontend geocoding
+                const nomUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+                const nomRes = await fetch(nomUrl, { headers: { 'Accept-Language': 'en' } });
+                const nomData = await nomRes.json();
+                return (nomData && (nomData.display_name || nomData.name)) || '';
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function checkHTTPS() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                console.warn('GPS accuracy may be reduced on HTTP. Please use HTTPS for best results.');
+                showToast('For best GPS accuracy, please use HTTPS or localhost');
+            }
+        }
+
+        function updateLocationData(position) {
+            const accuracy = position.coords.accuracy;
+            console.log(`GPS Accuracy: ${accuracy.toFixed(1)} meters`);
+            
+            const newLocation = {
+                            latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: accuracy,
+                source: 'gps',
+                timestamp: Date.now()
+            };
+            
+            // Track best location so far
+            if (!bestLocation || accuracy < bestLocation.accuracy) {
+                bestLocation = newLocation;
+                console.log(`New best location: ${accuracy.toFixed(1)}m accuracy`);
+            }
+            
+            // Always update current location for immediate feedback
+            currentLocation = newLocation;
+                        updateSeverityMessage();
+            
+            // Show accuracy feedback
+            if (accuracy > 100) {
+                showToast(`GPS accuracy: ${accuracy.toFixed(0)}m. Go outside for better accuracy.`);
+            } else if (accuracy <= 50) {
+                showToast(`GPS accuracy achieved: ${accuracy.toFixed(0)}m`);
+            }
+            
+            // Reverse geocode in background
+            reverseGeocode(currentLocation.latitude, currentLocation.longitude).then(addr => {
+                if (addr) {
+                    currentLocation.address = addr;
+                    updateSeverityMessage();
+                }
+            });
+        }
+
+        function stopLocationWatching() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                console.log('Stopped location watching');
+            }
+        }
+
+        function handleLocationSuccess(position) {
+            const accuracy = position.coords.accuracy;
+            console.log(`GPS Accuracy: ${accuracy.toFixed(1)} meters`);
+            
+            // Reject obviously bad readings (accuracy > 1000m is usually indoor/poor GPS)
+            if (accuracy > 1000) {
+                console.log(`Rejecting poor accuracy reading: ${accuracy.toFixed(1)}m`);
+                
+                // If we've been getting bad readings for more than 15 seconds, try IP fallback
+                if (locationStartTime && (Date.now() - locationStartTime) > 15000) {
+                    console.log('GPS giving consistently poor readings for 15+ seconds. Trying IP fallback.');
+                    stopLocationWatching();
+                    showToast('GPS not working well. Trying IP location...');
+                    useIPFallback();
+                    return;
+                }
+                
+                showToast(`Poor GPS signal: ${accuracy.toFixed(0)}m. Keep trying...`);
+                return;
+            }
+            
+            updateLocationData(position);
+            
+            // Check if we've achieved target accuracy
+            if (accuracy <= ACCURACY_TARGET) {
+                stopLocationWatching();
+                isLocationFetching = false;
+                console.log(`Target accuracy achieved: ${accuracy.toFixed(1)}m`);
+                showToast(`GPS accuracy achieved: ${accuracy.toFixed(0)}m`);
+                return;
+            }
+            
+            // If accuracy is good but not perfect, keep trying for better
+            if (accuracy <= 200) {
+                console.log(`Good accuracy: ${accuracy.toFixed(1)}m, but trying for better...`);
+                showToast(`Good GPS: ${accuracy.toFixed(0)}m. Trying for better accuracy...`);
+            } else {
+                console.log(`Moderate accuracy: ${accuracy.toFixed(1)}m, keep trying...`);
+                showToast(`GPS improving: ${accuracy.toFixed(0)}m. Keep trying...`);
+            }
+            
+            // Check timeout safeguard
+            if (locationStartTime && (Date.now() - locationStartTime) > MAX_WATCH_TIME) {
+                stopLocationWatching();
+                isLocationFetching = false;
+                if (bestLocation && bestLocation.accuracy < 1000) {
+                    console.log(`Timeout reached. Using best available location: ${bestLocation.accuracy.toFixed(1)}m`);
+                    currentLocation = bestLocation;
+                    updateSeverityMessage();
+                    showToast(`Using best available location: ${bestLocation.accuracy.toFixed(0)}m accuracy`);
+                } else {
+                    console.log('Timeout reached. No good location found, trying IP fallback.');
+                    useIPFallback();
+                }
+            }
+        }
+        
+        async function useIPFallback() {
+            showToast('Getting better location...');
+            
+            // Try multiple IP geolocation services for better accuracy
+            const services = [
+                'https://ipapi.co/json/',
+                'https://ipinfo.io/json',
+                'https://api.ipgeolocation.io/ipgeo?apiKey=free'
+            ];
+            
+            for (const service of services) {
+                try {
+                    console.log(`Trying location service: ${service}`);
+                    const response = await fetch(service);
+                    const data = await response.json();
+                    
+                    if (data && data.latitude && data.longitude) {
+                        // Use the most accurate data available
+                        let accuracy = 5000; // 5km default
+                        let city = data.city || data.city_name || 'Unknown';
+                        let country = data.country || data.country_name || 'Unknown';
+                        
+                        // Adjust accuracy based on available data
+                        if (data.postal || data.postal_code) {
+                            accuracy = 2000; // 2km for postal code
+                        } else if (data.city || data.city_name) {
+                            accuracy = 3000; // 3km for city
+                        } else if (data.region || data.region_name) {
+                            accuracy = 8000; // 8km for region
+                        }
+                        
+                        currentLocation = { 
+                            latitude: parseFloat(data.latitude), 
+                            longitude: parseFloat(data.longitude), 
+                            accuracy: accuracy,
+                            source: 'ip',
+                            timestamp: Date.now()
+                        };
+                        updateSeverityMessage();
+                        showToast(`Location: ${city}, ${country} (~${(accuracy/1000).toFixed(1)}km accuracy)`);
+                        
+                        const addr = await reverseGeocode(currentLocation.latitude, currentLocation.longitude);
+                        if (addr) {
+                            currentLocation.address = addr;
+                            updateSeverityMessage();
+                        }
+                        return; // Success, exit
+                    }
+                } catch (error) {
+                    console.log(`Service ${service} failed:`, error);
+                    continue; // Try next service
+                }
+            }
+            
+            // If all services failed
+            currentLocation = null;
+            updateSeverityMessage();
+            showToast('Could not get location. Please try manual location.');
+        }
+
+        function handleLocationError(error) {
+            console.error("Geolocation error:", error && (error.message || error));
+            stopLocationWatching();
+            
+            if (error && (error.code === error.PERMISSION_DENIED)) {
+                alert('Please enable GPS and set location mode to High Accuracy.');
+            } else if (error && (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT)) {
+                showToast('Go outside for better GPS accuracy.');
+            }
+            
+            // Use best location if available, otherwise fallback to IP
+            if (bestLocation) {
+                console.log(`Using best available location after error: ${bestLocation.accuracy.toFixed(1)}m`);
+                currentLocation = bestLocation;
+                updateSeverityMessage();
+            } else {
+                        // Fallback to approximate IP-based location
+                        fetch('https://ipapi.co/json/')
+                            .then(res => res.ok ? res.json() : null)
+                    .then(async data => {
+                                if (data && data.latitude && data.longitude) {
+                            currentLocation = { 
+                                latitude: data.latitude, 
+                                longitude: data.longitude, 
+                                accuracy: 10000, // IP-based is very approximate
+                                source: 'ip' 
+                            };
+                            updateSeverityMessage();
+                            const addr = await reverseGeocode(currentLocation.latitude, currentLocation.longitude);
+                            if (addr) {
+                                currentLocation.address = addr;
+                                updateSeverityMessage();
+                            }
+                                } else {
+                                    currentLocation = null;
+                                updateSeverityMessage();
+                        }
+                            })
+                            .catch(() => {
+                                currentLocation = null;
+                                updateSeverityMessage();
+                            });
+            }
+        }
+
+        function getLocation() {
+            console.log('getLocation() called');
+            checkHTTPS();
+            
+            if ("geolocation" in navigator) {
+                console.log('Geolocation supported, starting GPS...');
+                showToast('Getting GPS location...');
+                
+                // Reset tracking variables
+                bestLocation = null;
+                locationStartTime = Date.now();
+                isLocationFetching = true;
+                
+                // Clear any existing watch
+                stopLocationWatching();
+                
+                // First try getCurrentPosition for immediate result
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        console.log('getCurrentPosition SUCCESS:', position.coords);
+                        handleLocationSuccess(position);
+                        
+                        // If accuracy is poor, start watching for better accuracy
+                        if (position.coords.accuracy > ACCURACY_TARGET) {
+                            console.log('Starting watchPosition for better accuracy...');
+                            watchId = navigator.geolocation.watchPosition(
+                                (watchPosition) => {
+                                    console.log('watchPosition update:', watchPosition.coords);
+                                    handleLocationSuccess(watchPosition);
+                                },
+                                (error) => {
+                                    console.error('watchPosition error:', error);
+                                    handleLocationError(error);
+                                },
+                                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                            );
+                        }
+                    },
+                    (error) => {
+                        console.error('getCurrentPosition FAILED:', error);
+                        handleLocationError(error);
+                    },
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
+                
+                // Set timeout safeguard
+                setTimeout(() => {
+                    if (isLocationFetching && (!currentLocation || currentLocation.accuracy > ACCURACY_TARGET)) {
+                        console.log('60-second timeout reached. Using best available location.');
+                        stopLocationWatching();
+                        if (bestLocation) {
+                            currentLocation = bestLocation;
+                            updateSeverityMessage();
+                            showToast(`Using best available location: ${bestLocation.accuracy.toFixed(0)}m accuracy`);
+            } else {
+                            console.log('No location found, trying IP fallback...');
+                            useIPFallback();
+                        }
+                        isLocationFetching = false;
+                    }
+                }, MAX_WATCH_TIME);
+                
+                        } else {
+                console.log('Geolocation not supported, using IP fallback');
+                isLocationFetching = false;
+                useIPFallback();
+            }
+        }
+        
+        // Debug function to test location manually
+        function testLocation() {
+            console.log('=== LOCATION DEBUG TEST ===');
+            console.log('Geolocation supported:', 'geolocation' in navigator);
+            console.log('Current location:', currentLocation);
+            console.log('Best location:', bestLocation);
+            console.log('Watch ID:', watchId);
+            console.log('Location start time:', locationStartTime);
+            console.log('Time elapsed:', locationStartTime ? Date.now() - locationStartTime : 'N/A');
+            console.log('Is fetching:', isLocationFetching);
+            console.log('HTTPS check:', location.protocol, location.hostname);
+            console.log('========================');
+        }
+        
+        // Simple test function to check basic geolocation
+        function testBasicLocation() {
+            console.log('Testing basic geolocation...');
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        console.log('Basic GPS test SUCCESS:', position.coords);
+                        showToast(`GPS test: ${position.coords.accuracy.toFixed(0)}m accuracy`);
+                    },
+                    (error) => {
+                        console.error('Basic GPS test FAILED:', error);
+                        showToast(`GPS test failed: ${error.message}`);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                console.log('Geolocation not supported');
+                showToast('Geolocation not supported');
+            }
+        }
+        
+        // Function to restart location with fresh settings
+        function restartLocation() {
+            console.log('Restarting location tracking...');
+            stopLocationWatching();
+            bestLocation = null;
+                            currentLocation = null;
+            isLocationFetching = false;
+            setTimeout(() => {
+                getLocation();
+            }, 1000);
+        }
+        
+        // Function to continuously retry until good accuracy
+        function keepTryingLocation() {
+            console.log('Starting continuous location retry...');
+            isLocationFetching = false;
+            stopLocationWatching();
+            bestLocation = null;
+                        currentLocation = null;
+            
+            const retryLocation = () => {
+                if (!isLocationFetching) {
+                    console.log('Retrying location fetch...');
+                    getLocation();
+                    
+                    // If no good location after 30 seconds, try again
+                    setTimeout(() => {
+                        if (isLocationFetching && (!currentLocation || currentLocation.accuracy > ACCURACY_TARGET)) {
+                            console.log('No good location yet, retrying...');
+                            retryLocation();
+                        }
+                    }, 30000);
+                }
+            };
+            
+            retryLocation();
+        }
+        
+        // Function to force IP fallback
+        function useIPLocation() {
+            console.log('Forcing IP location fallback...');
+            stopLocationWatching();
+            useIPFallback();
+        }
+        
+        // Function to try GPS with different settings
+        function tryBetterGPS() {
+            console.log('Trying GPS with different settings...');
+            stopLocationWatching();
+            bestLocation = null;
+            currentLocation = null;
+            
+            if ("geolocation" in navigator) {
+                showToast('Trying GPS with different settings...');
+                
+                // Try with different timeout and accuracy settings
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const accuracy = position.coords.accuracy;
+                        console.log(`GPS Accuracy: ${accuracy.toFixed(1)} meters`);
+                        
+                        if (accuracy <= 100) { // Accept anything under 100m
+                            console.log(`Acceptable GPS accuracy: ${accuracy.toFixed(1)}m`);
+                            currentLocation = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                accuracy: accuracy,
+                                source: 'gps',
+                                timestamp: Date.now()
+                            };
+                        updateSeverityMessage();
+                            stopLocationWatching();
+                            showToast(`GPS working: ${accuracy.toFixed(0)}m accuracy`);
+                        } else if (accuracy > 1000) {
+                            console.log(`Still poor GPS: ${accuracy.toFixed(1)}m`);
+                            showToast(`GPS still poor: ${accuracy.toFixed(0)}m. Try going outside.`);
+                        }
+                    },
+                    (error) => {
+                        console.error('GPS still failing:', error);
+                        showToast('GPS not working. Using IP location.');
+                        useIPFallback();
+                    },
+                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
+                );
+                
+                // Give it 15 seconds
+                setTimeout(() => {
+                    if (watchId) {
+                        stopLocationWatching();
+                        showToast('GPS timeout. Using IP location.');
+                        useIPFallback();
+                    }
+                }, 15000);
+            } else {
+                useIPFallback();
+            }
+        }
+        
+        // Function to set manual location
+        function setManualLocation() {
+            const lat = prompt('Enter latitude (e.g., 26.9124):');
+            const lon = prompt('Enter longitude (e.g., 75.7873):');
+            
+            if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+                const latitude = parseFloat(lat);
+                const longitude = parseFloat(lon);
+                
+                if (latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
+                    currentLocation = {
+                        latitude: latitude,
+                        longitude: longitude,
+                        accuracy: 50, // Manual input is very accurate
+                        source: 'manual',
+                        timestamp: Date.now()
+                    };
+                    updateSeverityMessage();
+                    showToast(`Manual location set: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                    
+                    // Get address for manual location
+                    reverseGeocode(latitude, longitude).then(addr => {
+                        if (addr) {
+                            currentLocation.address = addr;
+                            updateSeverityMessage();
+                        }
+                    });
+                } else {
+                    alert('Invalid coordinates. Latitude must be -90 to 90, Longitude must be -180 to 180.');
+                }
+            } else {
+                alert('Invalid input. Please enter valid numbers.');
+            }
+        }
+        
+        // Make functions available globally for debugging
+        window.testLocation = testLocation;
+        window.testBasicLocation = testBasicLocation;
+        window.restartLocation = restartLocation;
+        window.keepTryingLocation = keepTryingLocation;
+        window.useIPLocation = useIPLocation;
+        window.tryBetterGPS = tryBetterGPS;
+        window.setManualLocation = setManualLocation;
+        
+        getLocation();
+        
+        // Send Alerts
+        function sendAlerts() {
+            const messageText = previewTextEl.textContent;
+
+            // Try to open a messaging intent for the first available contact
+            const first = db.contacts && db.contacts.length ? db.contacts[0] : null;
+            const tryOpen = (url) => {
+                try {
+                    const w = window.open(url, '_blank');
+                    return !!w;
+                } catch (_) { return false; }
+            };
+
+            let opened = false;
+            if (first && first.phone) {
+                const waUrl = `https://wa.me/${first.phone}?text=${encodeURIComponent(messageText)}`;
+                opened = tryOpen(waUrl);
+            }
+
+            if (opened) {
+                showToast('Opened messaging app to send alert');
+            } else {
+                showToast('Could not open messaging app. Message copied to clipboard.');
+                // Fallback: copy message to clipboard
+                const temp = document.createElement('textarea');
+                temp.value = messageText;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+
+            // Log for debugging
+            db.contacts.forEach(contact => {
+                console.log(`Prepared alert to ${contact.name}: ${messageText}`);
+            });
+
+            // Show notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Emergency Alert Sent', {
+                    body: 'Your contacts have been notified. Help is on the way.',
+                    icon: 'https://placehold.co/192x192/FF3B30/ffffff?text=E'
+                });
+            }
+
+            // Backend dispatch (non-blocking)
+            try {
+                const payload = {
+                    message: messageText,
+                    contacts: db.contacts || [],
+                    location: currentLocation,
+                    medical: db.medicalDetails || {},
+                    channel: 'whatsapp'
+                };
+                fetch('http://localhost:3001/api/send-alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(r => r.ok ? r.json() : Promise.reject(new Error('Backend error')))
+                .then(() => {
+                    showToast('Server is sending alerts to all contacts');
+                })
+                .catch(() => {
+                    console.warn('Alert backend not available. Running client-only.');
+                });
+            } catch (_) {
+                console.warn('Failed to call alert backend.');
+            }
+
+            // Also trigger SMS via backend for each contact with a phone (non-blocking)
+            try {
+                let smsSuccessCount = 0;
+                let smsErrorCount = 0;
+                const totalContacts = (db.contacts || []).filter(c => c && c.phone).length;
+                
+                (db.contacts || []).forEach(contact => {
+                    if (!contact || !contact.phone) return;
+                    const smsPayload = { message: messageText, to: contact.phone };
+                    fetch('http://localhost:3001/send-sos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(smsPayload)
+                    })
+                    .then(r => r.ok ? r.json() : r.json().catch(() => ({})).then(err => Promise.reject(err)))
+                    .then((result) => {
+                        if (result.success) {
+                            smsSuccessCount++;
+                            console.log(`SMS sent successfully to ${contact.name || contact.phone}. SID: ${result.sid}`);
+                        } else {
+                            smsErrorCount++;
+                            console.warn(`SMS failed for ${contact.name || contact.phone}: ${result.error}`);
+                        }
+                        
+                        // Show final status after all SMS attempts
+                        if (smsSuccessCount + smsErrorCount === totalContacts) {
+                            if (smsSuccessCount > 0) {
+                                showToast(`SMS sent to ${smsSuccessCount} contact${smsSuccessCount > 1 ? 's' : ''}`);
+                            }
+                            if (smsErrorCount > 0) {
+                                showToast(`SMS failed for ${smsErrorCount} contact${smsErrorCount > 1 ? 's' : ''}. Check console for details.`);
+                            }
+                        }
+                    })
+                    .catch((err) => {
+                        smsErrorCount++;
+                        console.warn('SMS send failed for', contact.name || contact.phone, err && err.error);
+                        
+                        // Show final status after all SMS attempts
+                        if (smsSuccessCount + smsErrorCount === totalContacts) {
+                            if (smsSuccessCount > 0) {
+                                showToast(`SMS sent to ${smsSuccessCount} contact${smsSuccessCount > 1 ? 's' : ''}`);
+                            }
+                            if (smsErrorCount > 0) {
+                                showToast(`SMS failed for ${smsErrorCount} contact${smsErrorCount > 1 ? 's' : ''}. Check console for details.`);
+                            }
+                        }
+                    });
+                });
+            } catch (e) {
+                console.warn('Failed to dispatch SMS requests:', e && e.message);
+                showToast('Failed to send SMS. Check console for details.');
+            }
+        }
+        
+        // Request notification permission
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
+
+        // Accordion functionality for Insurance page
+        function toggleAccordion(id) {
+            const element = document.getElementById(id);
+            const icon = element.previousElementSibling.querySelector('.accordion-icon');
+            element.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Toast utility
+        function showToast(message) {
+            const root = document.getElementById('toast-root');
+            if (!root) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast-enter bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg dark:bg-gray-800';
+            toast.textContent = message;
+            root.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-enter-active');
+            });
+            setTimeout(() => {
+                toast.classList.remove('toast-enter-active');
+                toast.classList.add('toast-exit-active');
+                setTimeout(() => root.removeChild(toast), 200);
+            }, 2000);
+        }
+
+        // The following PWA code using blob URLs is not supported in this environment
+        // and has been removed to fix the Service Worker registration error.
+        
+    </script>
+
+</body>
+</html>
